@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/swilcox/badash.svg?branch=master)](https://travis-ci.org/swilcox/badash)
+[![CircleCI](https://circleci.com/gh/swilcox/badash/tree/master.svg?style=svg)](https://circleci.com/gh/swilcox/badash/tree/master)
 
 # badash
 The barely adequate dashboard
