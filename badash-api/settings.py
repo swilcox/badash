@@ -17,7 +17,7 @@ class LocalConfig(BaseConfig):
 
 class TestingConfig(BaseConfig):
     """Settings to use while running tests"""
-    MONGODB_URI = 'mongodb://localhost:27017/test_badash'
+    MONGODB_URI = 'mongomock://localhost:27017/test_badash'
 
 
 class ProductionConfig(BaseConfig):
