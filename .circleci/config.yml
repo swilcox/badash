@@ -19,11 +19,16 @@ jobs:
 
     steps:
       - checkout
+      - run:
+          name: create aggregate requirements
+          working_directory: badash-api/requirements
+          command: |
+            cat *.txt > combined-requirements.txt
 
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "badash-api/requirements/base.txt" }}
+          - v1-dependencies-{{ checksum "badash-api/requirements/combined-requirements.txt" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
@@ -38,7 +43,7 @@ jobs:
       - save_cache:
           paths:
             - ./venv
-          key: v1-dependencies-{{ checksum "badash-api/requirements/base.txt" }}
+          key: v1-dependencies-{{ checksum "badash-api/requirements/combined-requirements.txt" }}
         
       # run tests!
       - run:
@@ -46,7 +51,14 @@ jobs:
           working_directory: badash-api
           command: |
             . venv/bin/activate
-            pytest
+            pytest --cov=./
+
+      - run:
+          name: upload coverage to codecov
+          working_directory: badash-api
+          command: |
+            pip install codecov
+            codecov
 
       - store_artifacts:
           path: test-reports
