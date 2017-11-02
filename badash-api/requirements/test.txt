@@ -1,4 +1,6 @@
 -r base.txt
 mongomock
 pytest
+coverage
+pytest-cov
 
