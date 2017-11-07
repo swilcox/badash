@@ -8,10 +8,12 @@ from models import Dashboard, Job, Event
 mongoengine.connect(host=settings.MONGODB_URI)
 
 api = hug.API(__name__)
+api.http.add_middleware(hug.middleware.CORSMiddleware(api, max_age=10))
 
 
 @hug.exception(mongoengine.DoesNotExist)
 def handle_does_not_exist(exception, response=None):
+    """object doesn't exist exception handler"""
     if response:
         response.status = hug.falcon.HTTP_404
     return {'error': str(exception)}
@@ -34,10 +36,29 @@ def dashboards_post(response, title: str, slug='', description='', jobs=None):
         title=title,
         slug=slug,
         description=description,
-        jobs=jobs if jobs else list()
+        jobs=[Job.objects.get(slug=j) for j in jobs] if jobs else list()
     )
     response.status = hug.falcon.HTTP_201
     return dashboard.to_dict()
+
+
+@hug.put('/dashboards/{dashboard_slug}/')
+def dashboards_put(dashboard_slug: str, title: str, description: str, jobs: list):
+    """update a dashboard"""
+    dashboard = Dashboard.objects.get(slug=dashboard_slug)
+    dashboard.title = title
+    dashboard.description = description
+    dashboard.jobs = [Job.objects.get(slug=j) for j in jobs]
+    dashboard.save()
+    return dashboard.to_dict()
+
+
+@hug.delete('/dashboards/{dashboard_slug}/')
+def dashboards_delete(dashboard_slug: str):
+    """delete a dashboard"""
+    dashboard = Dashboard.objects.get(slug=dashboard_slug)
+    dashboard.delete()
+    return {'status': 'deleted', 'slug': dashboard_slug}
 
 
 @hug.get(('/jobs', '/jobs/{job_slug}/'))
