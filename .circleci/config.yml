@@ -58,7 +58,7 @@ jobs:
           name: upload code coverage
           command: |
             . ./venv/bin/activate
-            coverage combine
+            coverage combine ./badash-api/.coverage
             codecov
 
       - store_artifacts:
