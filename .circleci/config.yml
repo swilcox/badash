@@ -58,6 +58,7 @@ jobs:
           name: upload code coverage
           command: |
             . ./venv/bin/activate
+            coverage combine
             codecov
 
       - store_artifacts:
