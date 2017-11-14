@@ -136,7 +136,7 @@ class TestToDict(ApiTestCase):
         """test event.to_dict() method"""
         event_dict = Event.objects.filter(job=self.job)[1].to_dict()
         self.assertEqual(len(event_dict['_id']), 24)
-        self.assertEqual(len(event_dict['datetimestamp']), 26)
+        self.assertEqual(len(event_dict['datetimestamp']), 27)
         self.assertEqual(event_dict['job'], 'test-job')
         self.assertEqual(event_dict['result'], 0)
         self.assertEqual(event_dict['value'], 42)
