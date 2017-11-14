@@ -91,7 +91,7 @@ class Event(DynamicDocument):
         """return model as a json serializable dictionary"""
         result_dict = json.loads(self.to_json())
         result_dict.update({
-            'datetimestamp': str(self.datetimestamp.isoformat()),
+            'datetimestamp': str(self.datetimestamp.isoformat()) + 'Z',
             '_id': str(self.id),
             'job': self.job.slug
         })
