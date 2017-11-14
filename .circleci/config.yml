@@ -1,0 +1,67 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:3.6.1
+      
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run:
+          name: create aggregate requirements
+          working_directory: badash-api/requirements
+          command: |
+            cat *.txt > combined-requirements.txt
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - badash-api-dependencies-{{ checksum "badash-api/requirements/combined-requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - badash-api-dependencies-
+
+      - run:
+          name: install dependencies
+          working_directory: badash-api
+          command: |
+            python3 -m venv ../venv
+            . ../venv/bin/activate
+            pip install -r requirements/test.txt
+            pip install codecov
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: badash-api-dependencies-{{ checksum "badash-api/requirements/combined-requirements.txt" }}
+        
+      # run tests!
+      - run:
+          name: run tests
+          working_directory: badash-api
+          command: |
+            . ../venv/bin/activate
+            pytest --cov=./
+
+      - run:
+          name: upload code coverage
+          command: |
+            . ./venv/bin/activate
+            coverage combine ./badash-api/.coverage
+            codecov
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+          
