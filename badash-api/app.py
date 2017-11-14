@@ -30,7 +30,7 @@ def dashboards_get(dashboard_slug=''):
 
 
 @hug.post('/dashboards', status=hug.HTTP_201)
-def dashboards_post(response, title: str, slug='', description='', jobs=None):
+def dashboards_post(response, title: str, jobs: hug.types.multiple, slug='', description=''):
     """create new dashboard"""
     dashboard = Dashboard.objects.create(
         title=title,
@@ -43,7 +43,7 @@ def dashboards_post(response, title: str, slug='', description='', jobs=None):
 
 
 @hug.put('/dashboards/{dashboard_slug}/')
-def dashboards_put(dashboard_slug: str, title: str, description: str, jobs: list):
+def dashboards_put(dashboard_slug: str, title: str, description: str, jobs: hug.types.multiple):
     """update a dashboard"""
     dashboard = Dashboard.objects.get(slug=dashboard_slug)
     dashboard.title = title
@@ -92,6 +92,14 @@ def jobs_put(job_slug: str, title: str, description: str, config: dict):
     job.config = config
     job.save()
     return job.to_dict()
+
+
+@hug.delete('/jobs/{job_slug}')
+def jobs_delete(job_slug: str):
+    """Update a job"""
+    job = Job.objects.get(slug=job_slug)
+    job.delete()
+    return {'status': 'deleted', 'slug': job_slug}
 
 
 @hug.post('/events', status=hug.HTTP_201)
