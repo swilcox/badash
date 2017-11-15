@@ -1,4 +1,5 @@
 """Hug app"""
+from marshmallow import fields
 import mongoengine
 import hug
 from settings import settings
@@ -61,7 +62,7 @@ def dashboards_delete(dashboard_slug: str):
     return {'status': 'deleted', 'slug': dashboard_slug}
 
 
-@hug.get(('/jobs', '/jobs/{job_slug}/'))
+@hug.get(('/jobs', '/jobs/{job_slug}'))
 def jobs_get(job_slug='', page_size=settings.DEFAULT_PAGE_SIZE, page_number=1):
     """jobs view"""
     if job_slug:
@@ -72,7 +73,7 @@ def jobs_get(job_slug='', page_size=settings.DEFAULT_PAGE_SIZE, page_number=1):
 
 
 @hug.post('/jobs', status=hug.HTTP_201)
-def jobs_post(title: str, description='', slug='', config=None):
+def jobs_post(title: str, config: hug.types.json = None, description='', slug=''):
     """create a new Job"""
     job = Job.objects.create(
         title=title,
@@ -84,12 +85,12 @@ def jobs_post(title: str, description='', slug='', config=None):
 
 
 @hug.put('/jobs/{job_slug}')
-def jobs_put(job_slug: str, title: str, description: str, config: dict):
+def jobs_put(job_slug: str, title: str, description: str, config: hug.types.json = None):
     """Update a job"""
     job = Job.objects.get(slug=job_slug)
     job.title = title
     job.description = description
-    job.config = config
+    job.config = config if config else dict()
     job.save()
     return job.to_dict()
 
