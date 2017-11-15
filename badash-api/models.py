@@ -15,7 +15,7 @@ from settings import settings
 
 class Job(Document):
     """Job Model"""
-    slug = fields.StringField(default=None)
+    slug = fields.StringField(default=None, unique=True)
     title = fields.StringField()
     description = fields.StringField()
     config = fields.DictField()
@@ -45,7 +45,7 @@ class Job(Document):
 
 class Dashboard(Document):
     """Dashboard Model"""
-    slug = fields.StringField(default=None)
+    slug = fields.StringField(default=None, unique=True)
     title = fields.StringField()
     description = fields.StringField()
     jobs = fields.ListField(fields.ReferenceField(Job, reverse_delete_rule=PULL))
