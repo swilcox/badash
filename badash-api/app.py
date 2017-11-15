@@ -1,5 +1,4 @@
 """Hug app"""
-from marshmallow import fields
 import mongoengine
 import hug
 from settings import settings
