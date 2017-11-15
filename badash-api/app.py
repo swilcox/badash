@@ -16,7 +16,15 @@ api.http.add_middleware(hug.middleware.CORSMiddleware(api, max_age=10))
 def handle_does_not_exist(exception, response=None):
     """object doesn't exist exception handler"""
     if response:
-        response.status = hug.falcon.HTTP_404
+        response.status = hug.HTTP_404
+    return {'error': str(exception)}
+
+
+@hug.exception(mongoengine.NotUniqueError)
+def handle_not_unique_error(exception, response=None):
+    """duplicate object already exists handler"""
+    if response:
+        response.status = hug.HTTP_409
     return {'error': str(exception)}
 
 
