@@ -1,6 +1,8 @@
 """test_models.py"""
 import json
 
+from mongoengine.errors import NotUniqueError
+
 from models import Dashboard, Job, Event
 from .base_testcase import ApiTestCase
 
@@ -125,12 +127,30 @@ class TestToDict(ApiTestCase):
         self.assertEqual(len(job_dict['events']), 1)
         self.assertEqual(job_dict['events'][0]['value'], self.e1.value)
 
+    def test_no_job_dupes(self):
+        """test that we can't create duplicate jobs"""
+        with self.assertRaises(NotUniqueError):
+            Job.objects.create(
+                title='Another test job',
+                slug='test-job', # dupe!
+                description='ha ha'
+            )
+
     def test_dashboard(self):
         """test dashboard.to_dict() method"""
         dash_dict = self.dashboard.to_dict()
         self.assertEqual(dash_dict['title'], 'Test Dashboard')
         self.assertEqual(len(dash_dict['jobs']), 1)
         self.assertEqual(dash_dict['jobs'][0], self.job.to_dict())
+    
+    def test_no_dashboard_dupes(self):
+        """test that we can't create a duplicate"""
+        with self.assertRaises(NotUniqueError):
+            Dashboard.objects.create(
+                title='Dupe Dashboard',
+                slug='test-dashboard', # dupe!
+                description='Blah'
+            )
 
     def test_event(self):
         """test event.to_dict() method"""

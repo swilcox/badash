@@ -97,6 +97,18 @@ class TestApi(ApiTestCase):
         self.assertEqual(resp.status, hug.HTTP_200)
         self.assertEqual(resp.data, Dashboard.objects.first().to_dict())
 
+    def test_dashboard_duplicate(self):
+        """test that we can't create a duplicate dashboard"""
+        resp = hug.test.post(
+            api,
+            url='/dashboards',
+            title='Test Dashboard',
+            slug='test-dashboard',  # dupe!
+            jobs=['test-job'],
+            description='Just another test!'
+        )
+        self.assertEqual(resp.status, hug.HTTP_409)
+
     def test_jobs_api(self):
         """test jobs (all) api"""
         # test invalid methods and calls
@@ -125,6 +137,22 @@ class TestApi(ApiTestCase):
         self.assertEqual(resp.status, hug.HTTP_201)
         self.assertEqual(resp.data, Job.objects.get(slug='test-job').to_dict())
         self.assertEqual(resp.data['config'], {'my_option': 'hello world'})
+    
+    def test_job_duplicate(self):
+        """make sure we can't post a duplicate"""
+        resp = hug.test.post(
+            api,
+            url='/jobs',
+            title='Test Job',
+            slug='test-job',  # duplicate!
+            description='This is a Test Job',
+            config='{"my_option": "hello world"}'
+        )
+        self.assertEqual(resp.status, hug.HTTP_409)
+        self.assertEqual(
+            resp.data,
+            {'error': 'Tried to save duplicate unique keys (Duplicate Key Error)'}
+        )
 
     def test_job_object_api(self):
         """test single job object api"""
