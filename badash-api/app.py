@@ -15,7 +15,15 @@ api.http.add_middleware(hug.middleware.CORSMiddleware(api, max_age=10))
 def handle_does_not_exist(exception, response=None):
     """object doesn't exist exception handler"""
     if response:
-        response.status = hug.falcon.HTTP_404
+        response.status = hug.HTTP_404
+    return {'error': str(exception)}
+
+
+@hug.exception(mongoengine.NotUniqueError)
+def handle_not_unique_error(exception, response=None):
+    """duplicate object already exists handler"""
+    if response:
+        response.status = hug.HTTP_409
     return {'error': str(exception)}
 
 
@@ -61,7 +69,7 @@ def dashboards_delete(dashboard_slug: str):
     return {'status': 'deleted', 'slug': dashboard_slug}
 
 
-@hug.get(('/jobs', '/jobs/{job_slug}/'))
+@hug.get(('/jobs', '/jobs/{job_slug}'))
 def jobs_get(job_slug='', page_size=settings.DEFAULT_PAGE_SIZE, page_number=1):
     """jobs view"""
     if job_slug:
@@ -72,7 +80,7 @@ def jobs_get(job_slug='', page_size=settings.DEFAULT_PAGE_SIZE, page_number=1):
 
 
 @hug.post('/jobs', status=hug.HTTP_201)
-def jobs_post(title: str, description='', slug='', config=None):
+def jobs_post(title: str, config: hug.types.json = None, description='', slug=''):
     """create a new Job"""
     job = Job.objects.create(
         title=title,
@@ -84,12 +92,12 @@ def jobs_post(title: str, description='', slug='', config=None):
 
 
 @hug.put('/jobs/{job_slug}')
-def jobs_put(job_slug: str, title: str, description: str, config: dict):
+def jobs_put(job_slug: str, title: str, description: str, config: hug.types.json = None):
     """Update a job"""
     job = Job.objects.get(slug=job_slug)
     job.title = title
     job.description = description
-    job.config = config
+    job.config = config if config else dict()
     job.save()
     return job.to_dict()
 
