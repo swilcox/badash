@@ -1,44 +1,29 @@
 <template>
-  <div class="dashboard-list">
-    <h1>{{ msg }}</h1>
-    <h2>Dashboards</h2>
-  <div class="dashboard-list">
-  </div>
-    <ul class="dashboard-list">
-      <li v-for="dash in dashboards" :key="dash.slug"><router-link :to="{ name: 'dashboard', params: { slug: dash.slug } }">{{ dash.title }}</router-link></li>
-    </ul>
+  <div class="about">
+    <img class="logo" src="../assets/badash-logo.svg"/>
+    <h1>BADash</h1>
+    <h2>the Barely Adequate Dashboard</h2>
+    <p></p>
   </div>
 </template>
+
 
 <script>
 export default {
   name: 'Home',
   data () {
     return {
-      msg: 'BaDash',
-      dashboards: []
+      msg: 'BaDash'
     }
-  },
-  methods: {
-    getDashboards () {
-      this.$http
-        .get('http://localhost:8000/dashboards').then(response => {
-          this.dashboards = response.body['dashboard_list']
-        },
-        response => {
-          console.log(response.statusText)
-        })
-    }
-  },
-  beforeMount () {
-    this.getDashboards()
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-    ul.dashboard-list {
-        list-style: none;
-    }
+<style>
+
+  .about img.logo {
+      height: 10em;
+  }
+
 </style>

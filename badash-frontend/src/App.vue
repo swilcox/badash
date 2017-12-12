@@ -1,43 +1,78 @@
 <template>
   <div id="app">
-    <app-header id="app-header"></app-header>
-    <router-view/>
-    <app-footer id="app-footer"></app-footer>
+    <v-app dark>
+      <v-navigation-drawer
+        clipped
+        fixed
+        v-model="drawer"
+        app
+      >
+        <v-list dense>
+          <v-subheader>Dashboards</v-subheader>
+          <v-list-tile v-for="dash in dashboards" :key="dash.slug" :to="{ name: 'dashboard', params: { slug: dash.slug } }">
+            <v-list-tile-action>
+              <v-icon>dashboard</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>{{ dash.title }}</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-divider></v-divider>
+          <v-list-tile @click="">
+            <v-list-tile-action>
+              <v-icon>settings</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Settings</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list>
+      </v-navigation-drawer>
+      <v-toolbar app fixed clipped-left>
+        <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+        <v-toolbar-title><router-link :to="{ name: 'home' }"><img class="header-logo" src="./assets/badash-logo.png"></router-link></v-toolbar-title>
+      </v-toolbar>
+      <v-content>
+        <v-container fluid fill-height>
+            <v-fade-transition mode="out-in">
+              <router-view></router-view>
+            </v-fade-transition>
+        </v-container>
+      </v-content> 
+      <v-footer app fixed>BADash</v-footer>     
+    </v-app>
   </div>
 </template>
 
 <script>
-import AppHeader from './components/AppHeader'
-import AppFooter from './components/AppFooter'
 export default {
   name: 'app',
-  components: {
-    AppHeader,
-    AppFooter
+  data: () => ({
+    drawer: null,
+    dashboards: []
+  }),
+  methods: {
+    getDashboards () {
+      this.$http
+        .get('dashboards').then(response => {
+          this.dashboards = response.body['dashboard_list']
+        },
+        response => {
+          console.log(response.statusText)
+        })
+    }
+  },
+  beforeMount () {
+    this.getDashboards()
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-
-.label {
-  background-color: #2c3e50;
-  border-radius: .5em;
-  color: #fff;
-  padding-left: .5em;
-  padding-right: .5em;
-}
-
-.label-warning {
-  background-color: #f0ad4e;
-}
+  .header-logo {
+      height: 2em;
+      margin: 5px 0px -5px 5px;
+      padding: 0px 0px -5px 0px;
+  }
 
 </style>
