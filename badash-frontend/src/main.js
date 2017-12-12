@@ -3,18 +3,21 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
-import Purecss from 'purecss'
-import 'purecss/build/grids-responsive.css'
+// import Vuetify from 'vuetify'
 import moment from 'moment-timezone'
+import('vuetify/dist/vuetify.min.css')
 
 Vue.config.productionTip = false
+// Vue.http.options.root = process.env.API_ROOT
+Vue.http.options.root = process.env.API_BASE_URL
+console.log(process.env.API_BASE_URL)
 
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
   router,
   template: '<App/>',
-  components: { App, Purecss }
+  components: { App }
 })
 
 Vue.filter('formatDate', function (value) {
