@@ -1,6 +1,8 @@
 """Models
 """
 import json
+import secrets
+
 from mongoengine import (
     Document,
     DynamicDocument,
@@ -82,7 +84,7 @@ class Event(DynamicDocument):
         if self.job.display_field:
             return self.__dict__.get(self.job.display_field)
         else:
-            return None
+            return self.result
 
     def __str__(self):
         return "{} {}: {} ({})".format(self.job, self.datetimestamp, self.result, self.display_field)
@@ -93,6 +95,31 @@ class Event(DynamicDocument):
         result_dict.update({
             'datetimestamp': str(self.datetimestamp.isoformat()) + 'Z',
             '_id': str(self.id),
-            'job': self.job.slug
+            'job': self.job.slug,
+            'display_field': self.display_field
         })
+        return result_dict
+
+
+class ApiKey(Document):
+    """ApiKey Model"""
+    api_key = fields.StringField(max_length=256, default=lambda: secrets.token_urlsafe())
+    user = fields.StringField()
+    meta = {
+        'indexes': [
+            'api_key'
+        ]
+    }
+
+    def __str__(self):
+        return '{} ({})'.format(self.api_key, self.user)
+
+    def to_dict(self):
+        """return model as a json serializable dictionary"""
+        result_dict = json.loads(self.to_json())
+        result_dict.update(
+            {
+                '_id': str(self.id)
+            }
+        )
         return result_dict

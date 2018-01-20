@@ -2,10 +2,12 @@
 import json
 
 import hug
+import jwt
 
 from app import api
-from models import Dashboard, Job, Event
+from models import Dashboard, Job, Event, ApiKey
 from .base_testcase import ApiTestCase
+from settings import settings
 
 
 class TestApi(ApiTestCase):
@@ -26,6 +28,11 @@ class TestApi(ApiTestCase):
         )
         self.dashboard.jobs.append(self.job)
         self.dashboard.save()
+        self.api_key = ApiKey.objects.create(
+            user='test',
+            api_key='my-test-key'
+        )
+        self.token = jwt.encode({'user': 'me'}, settings.JWT_SECRET)
 
     def tearDown(self):
         Event.drop_collection()
@@ -38,8 +45,22 @@ class TestApi(ApiTestCase):
         self.assertEqual(hug.test.put(api, url='/events').status, hug.HTTP_405)
         self.assertEqual(hug.test.patch(api, url='/events').status, hug.HTTP_405)
         self.assertEqual(hug.test.delete(api, url='/events').status, hug.HTTP_405)
-        self.assertEqual(hug.test.post(api, url='/events').status, hug.HTTP_400)
+        self.assertEqual(hug.test.post(api, url='/events').status, hug.HTTP_401)
         resp = hug.test.post(api, url='/events', params={'job': 'test-job', 'result': 0})
+        self.assertEqual(resp.status, hug.HTTP_401)
+        resp = hug.test.post(
+            api,
+            url='/events',
+            headers={'X-Api-Key': 'bad-key'},
+            params={'job': 'test-job', 'result': 0}
+        )
+        self.assertEqual(resp.status, hug.HTTP_401)
+        resp = hug.test.post(
+            api,
+            url='/events',
+            headers={'X-Api-Key': 'my-test-key'},
+            params={'job': 'test-job', 'result': 0}
+        )
         self.assertEqual(resp.status, hug.HTTP_201)
         self.assertEqual(Event.objects.filter(job=self.job).count(), 4)
 
@@ -49,7 +70,8 @@ class TestApi(ApiTestCase):
         self.assertEqual(hug.test.patch(api, url='/dashboards').status, hug.HTTP_405)
         self.assertEqual(hug.test.delete(api, url='/dashboards').status, hug.HTTP_405)
         self.assertEqual(hug.test.put(api, url='/dashboards').status, hug.HTTP_405)
-        self.assertEqual(hug.test.post(api, url='/dashboards').status, hug.HTTP_400)
+        self.assertEqual(hug.test.post(api, url='/dashboards').status, hug.HTTP_401)
+        self.assertEqual(hug.test.post(api, url='/dashboards', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_400)
         # test GET
         resp = hug.test.get(api, url='/dashboards')
         self.assertEqual(resp.status, hug.HTTP_200)
@@ -64,14 +86,16 @@ class TestApi(ApiTestCase):
     def test_dashboard_object_api(self):
         """test single dashboard object related api calls."""
         # test invalid methods and/or non-existent items
-        self.assertEqual(hug.test.put(api, url='/dashboards/not-a-dashboard').status, hug.HTTP_400)
-        self.assertEqual(hug.test.get(api, url='/dashboards/not-a-dashboard').status, hug.HTTP_404)
-        self.assertEqual(hug.test.delete(api, url='/dashboards/not-a-dashboard').status, hug.HTTP_404)
+        self.assertEqual(hug.test.put(api, url='/dashboards/not-a-dashboard', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_400)
+        self.assertEqual(hug.test.get(api, url='/dashboards/not-a-dashboard', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_404)
+        self.assertEqual(hug.test.delete(api, url='/dashboards/not-a-dashboard', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_404)
         self.assertEqual(hug.test.patch(api, url='/dashboards/test-dashboard').status, hug.HTTP_405)
-        self.assertEqual(hug.test.put(api, url='/dashboards/test-dashboard').status, hug.HTTP_400)
+        self.assertEqual(hug.test.put(api, url='/dashboards/test-dashboard').status, hug.HTTP_401)
+        self.assertEqual(hug.test.put(api, url='/dashboards/test-dashboard', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_400)
         # PUT test
         resp = hug.test.put(
             api,
+            headers={'X-Api-Key': 'my-test-key'},
             url='/dashboards/test-dashboard',
             title='My Test Dashboard',
             jobs=['test-job'],
@@ -80,11 +104,12 @@ class TestApi(ApiTestCase):
         self.assertEqual(resp.status, hug.HTTP_200)
         self.assertEqual(resp.data, Dashboard.objects.get(slug='test-dashboard').to_dict())
         # DELETE test
-        self.assertEqual(hug.test.delete(api, url='/dashboards/test-dashboard').status, hug.HTTP_200)
+        self.assertEqual(hug.test.delete(api, url='/dashboards/test-dashboard', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_200)
         self.assertEqual(Dashboard.objects.all().count(), 0)
         # POST test
         resp = hug.test.post(
             api,
+            headers={'X-Api-Key': 'my-test-key'},
             url='/dashboards',
             title='Test Dashboard',
             jobs=['test-job'],
@@ -101,6 +126,7 @@ class TestApi(ApiTestCase):
         """test that we can't create a duplicate dashboard"""
         resp = hug.test.post(
             api,
+            headers={'X-Api-Key': 'my-test-key'},
             url='/dashboards',
             title='Test Dashboard',
             slug='test-dashboard',  # dupe!
@@ -115,7 +141,7 @@ class TestApi(ApiTestCase):
         self.assertEqual(hug.test.patch(api, url='/jobs').status, hug.HTTP_405)
         self.assertEqual(hug.test.delete(api, url='/jobs').status, hug.HTTP_405)
         self.assertEqual(hug.test.put(api, url='/jobs').status, hug.HTTP_405)
-        self.assertEqual(hug.test.post(api, url='/jobs').status, hug.HTTP_400)
+        self.assertEqual(hug.test.post(api, url='/jobs', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_400)
         # GET test
         resp = hug.test.get(api, url='/jobs')
         self.assertEqual(resp.status, hug.HTTP_200)
@@ -129,6 +155,7 @@ class TestApi(ApiTestCase):
         # POST test
         resp = hug.test.post(
             api,
+            headers={'X-Api-Key': 'my-test-key'},
             url='/jobs',
             title='Test Job',
             description='This is a Test Job',
@@ -142,6 +169,7 @@ class TestApi(ApiTestCase):
         """make sure we can't post a duplicate"""
         resp = hug.test.post(
             api,
+            headers={'X-Api-Key': 'my-test-key'},
             url='/jobs',
             title='Test Job',
             slug='test-job',  # duplicate!
@@ -158,7 +186,7 @@ class TestApi(ApiTestCase):
         """test single job object api"""
         # test invalid methods and calls
         self.assertEqual(hug.test.patch(api, url='/jobs/test-job').status, hug.HTTP_405)
-        self.assertEqual(hug.test.put(api, url='/jobs/test-job').status, hug.HTTP_400)
+        self.assertEqual(hug.test.put(api, url='/jobs/test-job', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_400)
         self.assertEqual(hug.test.post(api, url='/jobs/test-job').status, hug.HTTP_405)
         # GET Test
         resp = hug.test.get(
@@ -170,6 +198,7 @@ class TestApi(ApiTestCase):
         # PUT Test
         resp = hug.test.put(
             api,
+            headers={'X-Api-Key': 'my-test-key'},
             url='/jobs/test-job',
             title='Changing my title',
             description='this is my new description'
@@ -179,7 +208,16 @@ class TestApi(ApiTestCase):
         self.assertEqual(resp.data['description'], 'this is my new description')
         self.assertEqual(resp.data['config'], {})
         # DELETE Test
-        self.assertEqual(hug.test.delete(api, url='/jobs/test-job').status, hug.HTTP_200)
+        self.assertEqual(hug.test.delete(api, url='/jobs/test-job', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_200)
         self.assertEqual(Job.objects.all().count(), 0)
         self.assertEqual(Event.objects.all().count(), 0)
     
+    def test_api_keys_api(self):
+        """test api_keys endpoint(s)"""
+        self.assertEqual(hug.test.patch(api, url='/api_keys').status, hug.HTTP_405)
+        self.assertEqual(hug.test.delete(api, url='/api_keys').status, hug.HTTP_405)
+        self.assertEqual(hug.test.get(api, url='/api_keys').status, hug.HTTP_405)
+        self.assertEqual(hug.test.put(api, url='/api_keys').status, hug.HTTP_405)
+        self.assertEqual(hug.test.post(api, url='/api_keys').status, hug.HTTP_401)
+        self.assertEqual(hug.test.post(api, url='/api_keys', headers={'Authorization': self.token}).status, hug.HTTP_201)
+        self.assertEqual(ApiKey.objects.all().count(), 2)

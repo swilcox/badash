@@ -1,6 +1,6 @@
 """base testcase"""
 from unittest import TestCase
-from models import Dashboard, Job, Event
+from models import Dashboard, Job, Event, ApiKey
 
 
 class ApiTestCase(TestCase):
@@ -14,6 +14,7 @@ class ApiTestCase(TestCase):
         Dashboard.drop_collection()
         Job.drop_collection()
         Event.drop_collection()
+        ApiKey.drop_collection()
         super().tearDownClass()
 
     def setUp(self):

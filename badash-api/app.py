@@ -1,9 +1,10 @@
 """Hug app"""
-import mongoengine
 import hug
-from settings import settings
-from models import Dashboard, Job, Event
+import mongoengine
 
+from settings import settings
+from auth import authenticated, api_key_auth, jwt_auth
+from models import Dashboard, Job, Event, ApiKey
 
 mongoengine.connect(host=settings.MONGODB_URI)
 
@@ -28,17 +29,17 @@ def handle_not_unique_error(exception, response=None):
 
 
 @hug.get(('/dashboards', '/dashboards/{dashboard_slug}/'))
-def dashboards_get(dashboard_slug=''):
+def dashboards_get(dashboard_slug: hug.types.text = ''):
     """dashboards view"""
     if dashboard_slug:
-        d = Dashboard.objects.get(slug=dashboard_slug)
-        return d.to_dict()
+        dashboard = Dashboard.objects.get(slug=dashboard_slug)
+        return dashboard.to_dict()
     else:
         return {'dashboard_list': [d.to_dict() for d in Dashboard.objects.all()]}
 
 
-@hug.post('/dashboards', status=hug.HTTP_201)
-def dashboards_post(response, title: str, jobs: hug.types.multiple, slug='', description=''):
+@hug.post('/dashboards', status=hug.HTTP_201, requires=authenticated)
+def dashboards_post(response, title: hug.types.text, jobs: hug.types.multiple, slug: hug.types.text = '', description: hug.types.text = ''):
     """create new dashboard"""
     dashboard = Dashboard.objects.create(
         title=title,
@@ -50,8 +51,8 @@ def dashboards_post(response, title: str, jobs: hug.types.multiple, slug='', des
     return dashboard.to_dict()
 
 
-@hug.put('/dashboards/{dashboard_slug}/')
-def dashboards_put(dashboard_slug: str, title: str, description: str, jobs: hug.types.multiple):
+@hug.put('/dashboards/{dashboard_slug}/', requires=authenticated)
+def dashboards_put(dashboard_slug: hug.types.text, title: hug.types.text, description: hug.types.text, jobs: hug.types.multiple):
     """update a dashboard"""
     dashboard = Dashboard.objects.get(slug=dashboard_slug)
     dashboard.title = title
@@ -61,8 +62,8 @@ def dashboards_put(dashboard_slug: str, title: str, description: str, jobs: hug.
     return dashboard.to_dict()
 
 
-@hug.delete('/dashboards/{dashboard_slug}/')
-def dashboards_delete(dashboard_slug: str):
+@hug.delete('/dashboards/{dashboard_slug}/', requires=authenticated)
+def dashboards_delete(dashboard_slug: hug.types.text):
     """delete a dashboard"""
     dashboard = Dashboard.objects.get(slug=dashboard_slug)
     dashboard.delete()
@@ -70,7 +71,7 @@ def dashboards_delete(dashboard_slug: str):
 
 
 @hug.get(('/jobs', '/jobs/{job_slug}'))
-def jobs_get(job_slug='', page_size=settings.DEFAULT_PAGE_SIZE, page_number=1):
+def jobs_get(job_slug: hug.types.text = '', page_size: hug.types.number = settings.DEFAULT_PAGE_SIZE, page_number: hug.types.number = 1):
     """jobs view"""
     if job_slug:
         j = Job.objects.get(slug=job_slug)
@@ -79,8 +80,8 @@ def jobs_get(job_slug='', page_size=settings.DEFAULT_PAGE_SIZE, page_number=1):
         return {'job_list': [j.to_dict() for j in Job.objects.skip((page_number - 1) * page_size).limit(page_size)]}
 
 
-@hug.post('/jobs', status=hug.HTTP_201)
-def jobs_post(title: str, config: hug.types.json = None, description='', slug=''):
+@hug.post('/jobs', status=hug.HTTP_201, requires=authenticated)
+def jobs_post(title: hug.types.text, config: hug.types.json = None, description: hug.types.text = '', slug: hug.types.text = ''):
     """create a new Job"""
     job = Job.objects.create(
         title=title,
@@ -91,8 +92,8 @@ def jobs_post(title: str, config: hug.types.json = None, description='', slug=''
     return job.to_dict()
 
 
-@hug.put('/jobs/{job_slug}')
-def jobs_put(job_slug: str, title: str, description: str, config: hug.types.json = None):
+@hug.put('/jobs/{job_slug}', requires=authenticated)
+def jobs_put(job_slug: hug.types.text, title: hug.types.text, description: hug.types.text, config: hug.types.json = None):
     """Update a job"""
     job = Job.objects.get(slug=job_slug)
     job.title = title
@@ -102,16 +103,16 @@ def jobs_put(job_slug: str, title: str, description: str, config: hug.types.json
     return job.to_dict()
 
 
-@hug.delete('/jobs/{job_slug}')
-def jobs_delete(job_slug: str):
+@hug.delete('/jobs/{job_slug}', requires=authenticated)
+def jobs_delete(job_slug: hug.types.text):
     """Update a job"""
     job = Job.objects.get(slug=job_slug)
     job.delete()
     return {'status': 'deleted', 'slug': job_slug}
 
 
-@hug.post('/events', status=hug.HTTP_201)
-def events_post(job: str, result: int, **kwargs):
+@hug.post('/events', status=hug.HTTP_201, requires=api_key_auth)
+def events_post(user: hug.directives.user, job: hug.types.text, result: hug.types.number, **kwargs):
     """create a new event"""
     event_job = Job.objects.get(slug=job)
     event = Event.objects.create(
@@ -120,3 +121,17 @@ def events_post(job: str, result: int, **kwargs):
         **kwargs
     )
     return event.to_dict()
+
+
+@hug.post('/api_keys', status=hug.HTTP_201, requires=jwt_auth)
+def api_keys_post(user: hug.directives.user):
+    """create a new api_key for a user"""
+    a_key = ApiKey.objects.create(user=user['user'])
+    return a_key.to_dict()
+
+
+@hug.cli()
+def create_api_key(user='admin'):
+    """create a new api_key"""
+    a_key = ApiKey.objects.create(user=user)
+    return a_key.to_dict()
