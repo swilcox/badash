@@ -3,8 +3,33 @@ import json
 
 from mongoengine.errors import NotUniqueError
 
-from models import Dashboard, Job, Event
+from models import Dashboard, Job, Event, ApiKey
 from .base_testcase import ApiTestCase
+
+
+class TestApiKey(ApiTestCase):
+    """Test ApiKey related stuff"""
+
+    def test_api_key_default(self):
+        """test key defaulting works"""
+        api_key = ApiKey.objects.create(user='me')
+        self.assertNotEqual(api_key.api_key, '')
+
+    def test_api_key_to_dict(self):
+        """test to_dict output"""
+        api_key = ApiKey.objects.create(user='me')
+        self.assertEqual(
+            api_key.to_dict(),
+            {'user': 'me', 'api_key': api_key.api_key, '_id': str(api_key.id)}
+        )
+
+    def test_api_key_str(self):
+        """test __str__ representation"""
+        api_key = ApiKey.objects.create(user='me')
+        self.assertEqual(
+            str(api_key),
+            '{} ({})'.format(api_key.api_key, 'me')
+        )
 
 
 class TestModelCreation(ApiTestCase):
@@ -39,7 +64,7 @@ class TestModelCreation(ApiTestCase):
             extra_value=42.2,
             text_value='särskild'
         )
-        self.assertEqual(str(event), 'Test E Job {}: 0 (None)'.format(event.datetimestamp))
+        self.assertEqual(str(event), 'Test E Job {}: 0 (0)'.format(event.datetimestamp))
         self.assertEqual(event.extra_value, 42.2)
         self.assertEqual(event.text_value, 'särskild')
 
@@ -142,7 +167,7 @@ class TestToDict(ApiTestCase):
         self.assertEqual(dash_dict['title'], 'Test Dashboard')
         self.assertEqual(len(dash_dict['jobs']), 1)
         self.assertEqual(dash_dict['jobs'][0], self.job.to_dict())
-    
+
     def test_no_dashboard_dupes(self):
         """test that we can't create a duplicate"""
         with self.assertRaises(NotUniqueError):

@@ -8,6 +8,7 @@ class BaseConfig(object):
     """Base Configuration settings"""
     MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/badash')
     DEFAULT_PAGE_SIZE = 10
+    JWT_SECRET = os.environ.get('JWT_SECRET')
 
 
 class LocalConfig(BaseConfig):
@@ -18,6 +19,7 @@ class LocalConfig(BaseConfig):
 class TestingConfig(BaseConfig):
     """Settings to use while running tests"""
     MONGODB_URI = 'mongomock://localhost:27017/test_badash'
+    JWT_SECRET = 'test_secret'
 
 
 class ProductionConfig(BaseConfig):

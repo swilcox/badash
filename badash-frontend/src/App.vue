@@ -31,12 +31,19 @@
       <v-toolbar app fixed clipped-left>
         <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
         <v-toolbar-title><router-link :to="{ name: 'home' }"><img class="header-logo" src="./assets/badash-logo.png"></router-link></v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <v-btn slot="activator"><v-icon>account_circle</v-icon></v-btn>
+          <v-list>
+            <login></login>
+          </v-list>
+        </v-menu>
       </v-toolbar>
       <v-content>
         <v-container fluid fill-height>
-            <v-fade-transition mode="out-in">
-              <router-view></router-view>
-            </v-fade-transition>
+          <v-fade-transition mode="out-in">
+            <router-view></router-view>
+          </v-fade-transition>
         </v-container>
       </v-content> 
       <v-footer app fixed>BADash</v-footer>     
@@ -45,12 +52,17 @@
 </template>
 
 <script>
+import Login from '@/components/Login'
+
 export default {
   name: 'app',
   data: () => ({
     drawer: null,
     dashboards: []
   }),
+  components: {
+    Login
+  },
   methods: {
     getDashboards () {
       this.$http
