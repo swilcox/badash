@@ -39,7 +39,7 @@ def dashboards_get(dashboard_slug: hug.types.text = ''):
 
 
 @hug.post('/dashboards', status=hug.HTTP_201, requires=authenticated)
-def dashboards_post(response, title: hug.types.text, jobs: hug.types.multiple, slug: hug.types.text = '', description: hug.types.text = ''):
+def dashboards_post(title: hug.types.text, jobs: hug.types.multiple, slug: hug.types.text = '', description: hug.types.text = ''):
     """create new dashboard"""
     dashboard = Dashboard.objects.create(
         title=title,
@@ -47,7 +47,6 @@ def dashboards_post(response, title: hug.types.text, jobs: hug.types.multiple, s
         description=description,
         jobs=[Job.objects.get(slug=j) for j in jobs] if jobs else list()
     )
-    response.status = hug.falcon.HTTP_201
     return dashboard.to_dict()
 
 
