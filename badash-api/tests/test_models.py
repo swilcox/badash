@@ -23,6 +23,14 @@ class TestApiKey(ApiTestCase):
             {'user': 'me', 'api_key': api_key.api_key, '_id': str(api_key.id)}
         )
 
+    def test_api_key_str(self):
+        """test __str__ representation"""
+        api_key = ApiKey.objects.create(user='me')
+        self.assertEqual(
+            str(api_key),
+            '{} ({})'.format(api_key.api_key, 'me')
+        )
+
 
 class TestModelCreation(ApiTestCase):
     """Test Model Creation"""

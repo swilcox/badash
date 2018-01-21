@@ -18,7 +18,8 @@ jwt_auth = hug.authentication.token(token_verify)
 
 def api_key_verify(api_key):
     """auth via an api key"""
-    return ApiKey.objects.filter(api_key=api_key).first()
+    api_key_object = ApiKey.objects.filter(api_key=api_key).first()
+    return api_key_object if api_key_object else False
 
 
 api_key_auth = hug.authentication.api_key(api_key_verify)
