@@ -1,0 +1,6 @@
+site_name: BADash
+pages:
+    - Home: index.md
+    - API: api.md
+    - About: about.md
+theme: readthedocs
