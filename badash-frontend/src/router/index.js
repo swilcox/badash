@@ -4,6 +4,7 @@ import VueResource from 'vue-resource'
 import Home from '@/components/Home'
 import Dashboard from '@/components/Dashboard'
 import JobDetail from '@/components/JobDetail'
+import Callback from '@/components/Callback'
 import Vuetify from 'vuetify'
 
 Vue.use(Vuetify)
@@ -28,6 +29,10 @@ export default new Router({
       path: '/job/:slug',
       name: 'job-detail',
       component: JobDetail
+    },
+    {
+      path: '/callback',
+      component: Callback
     }
   ],
   mode: 'history'
