@@ -216,8 +216,18 @@ class TestApi(ApiTestCase):
         """test api_keys endpoint(s)"""
         self.assertEqual(hug.test.patch(api, url='/api_keys').status, hug.HTTP_405)
         self.assertEqual(hug.test.delete(api, url='/api_keys').status, hug.HTTP_405)
-        self.assertEqual(hug.test.get(api, url='/api_keys').status, hug.HTTP_405)
+        self.assertEqual(hug.test.get(api, url='/api_keys').status, hug.HTTP_401)
         self.assertEqual(hug.test.put(api, url='/api_keys').status, hug.HTTP_405)
         self.assertEqual(hug.test.post(api, url='/api_keys').status, hug.HTTP_401)
-        self.assertEqual(hug.test.post(api, url='/api_keys', headers={'Authorization': self.token}).status, hug.HTTP_201)
+        self.assertEqual(
+            hug.test.post(
+                api,
+                url='/api_keys',
+                headers={'Authorization': self.token}
+            ).status,
+            hug.HTTP_201
+        )
         self.assertEqual(ApiKey.objects.all().count(), 2)
+        resp = hug.test.get(api, url='/api_keys', headers={'Authorization': self.token})
+        self.assertEqual(resp.status, hug.HTTP_200)
+        self.assertEqual(resp.data, [ApiKey.objects.filter(user='me').first().to_dict()])
