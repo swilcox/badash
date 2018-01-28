@@ -129,8 +129,18 @@ def api_keys_post(user: hug.directives.user):
     return a_key.to_dict()
 
 
+@hug.get('/api_keys', requires=jwt_auth)
+def api_keys_get(user: hug.directives.user):
+    """get api_keys"""
+    return [a_key.to_dict() for a_key in ApiKey.objects.filter(user=user['user'])]
+
+
 @hug.cli()
 def create_api_key(user='admin'):
     """create a new api_key"""
     a_key = ApiKey.objects.create(user=user)
     return a_key.to_dict()
+
+
+if __name__ == '__main__':
+    create_api_key.interface.cli()
