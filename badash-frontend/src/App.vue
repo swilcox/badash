@@ -18,7 +18,7 @@
             </v-list-tile-content>
           </v-list-tile>
           <v-divider></v-divider>
-          <v-list-tile @click="" v-if="isLoggedIn()">
+          <v-list-tile :to="{ name: 'settings' }" v-if="isLoggedIn()">
             <v-list-tile-action>
               <v-icon>settings</v-icon>
             </v-list-tile-action>

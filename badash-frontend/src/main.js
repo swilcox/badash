@@ -6,11 +6,11 @@ import router from './router'
 // import Vuetify from 'vuetify'
 import moment from 'moment-timezone'
 import('vuetify/dist/vuetify.min.css')
+import('vue-googlemaps/dist/vue-googlemaps.css')
 
 Vue.config.productionTip = false
 // Vue.http.options.root = process.env.API_ROOT
 Vue.http.options.root = process.env.API_BASE_URL
-console.log(process.env.API_BASE_URL)
 
 /* eslint-disable no-new */
 new Vue({
