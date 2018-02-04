@@ -119,3 +119,11 @@ ENV/
 # mypy
 .mypy_cache/
 
+# auth0 and google config
+*/config/auth0.js
+*/config/google.js
+
+# zappa settings
+zappa_settings.json
+
+
