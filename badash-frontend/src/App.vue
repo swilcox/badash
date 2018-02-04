@@ -18,7 +18,7 @@
             </v-list-tile-content>
           </v-list-tile>
           <v-divider></v-divider>
-          <v-list-tile @click="">
+          <v-list-tile @click="" v-if="isLoggedIn()">
             <v-list-tile-action>
               <v-icon>settings</v-icon>
             </v-list-tile-action>
@@ -33,9 +33,29 @@
         <v-toolbar-title><router-link :to="{ name: 'home' }"><img class="header-logo" src="./assets/badash-logo.png"></router-link></v-toolbar-title>
         <v-spacer></v-spacer>
         <v-menu offset-y>
-          <v-btn slot="activator"><v-icon>account_circle</v-icon></v-btn>
+          <v-btn icon slot="activator"><v-icon v-if="!isLoggedIn()">account_box</v-icon>
+          <v-avatar v-if="isLoggedIn()"><img :src="getUserInfo().picture"/></v-avatar>
+          </v-btn>
           <v-list>
-            <login></login>
+            <v-list-tile v-if="isLoggedIn()">    
+              <v-list-tile-title>{{ getUserInfo().nickname }}</v-list-tile-title>
+            </v-list-tile>
+            <v-list-tile v-if="!isLoggedIn()" @click="handleLogin()">
+              <v-list-tile-action>
+                <v-list-tile-action><v-icon>account_circle</v-icon></v-list-tile-action>
+              </v-list-tile-action>
+              <v-list-tile-content>
+                <v-list-tile-title>Log In</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile v-if="isLoggedIn()" @click="handleLogout()">
+              <v-list-tile-action>
+                <v-list-tile-action><v-icon>exit_to_app</v-icon></v-list-tile-action>
+              </v-list-tile-action>
+              <v-list-tile-content>
+                <v-list-tile-title>Sign Out</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
           </v-list>
         </v-menu>
       </v-toolbar>
@@ -52,7 +72,7 @@
 </template>
 
 <script>
-import Login from '@/components/Login'
+import { isLoggedIn, login, logout, getUserProfile } from '@/utils/auth'
 
 export default {
   name: 'app',
@@ -60,10 +80,19 @@ export default {
     drawer: null,
     dashboards: []
   }),
-  components: {
-    Login
-  },
   methods: {
+    handleLogin () {
+      login()
+    },
+    handleLogout () {
+      logout()
+    },
+    isLoggedIn () {
+      return isLoggedIn()
+    },
+    getUserInfo () {
+      return getUserProfile()
+    },
     getDashboards () {
       this.$http
         .get('dashboards').then(response => {

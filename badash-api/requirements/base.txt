@@ -1,4 +1,5 @@
 hug
 mongoengine
 python-slugify
-pyjwt
+python-jose-cryptodome
+

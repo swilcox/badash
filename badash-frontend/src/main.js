@@ -2,7 +2,6 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import App from './App'
-import store from './store'
 import router from './router'
 // import Vuetify from 'vuetify'
 import moment from 'moment-timezone'
@@ -16,7 +15,6 @@ console.log(process.env.API_BASE_URL)
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
-  store,
   router,
   template: '<App/>',
   components: { App }
