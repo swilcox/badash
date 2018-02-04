@@ -9,7 +9,7 @@ from models import Dashboard, Job, Event, ApiKey
 mongoengine.connect(host=settings.MONGODB_URI)
 
 api = hug.API(__name__)
-api.http.add_middleware(hug.middleware.CORSMiddleware(api, max_age=10))
+api.http.add_middleware(hug.middleware.CORSMiddleware(api, max_age='10'))
 
 
 @hug.exception(mongoengine.DoesNotExist)
@@ -125,14 +125,22 @@ def events_post(user: hug.directives.user, job: hug.types.text, result: hug.type
 @hug.post('/api_keys', status=hug.HTTP_201, requires=jwt_auth)
 def api_keys_post(user: hug.directives.user):
     """create a new api_key for a user"""
-    a_key = ApiKey.objects.create(user=user['user'])
+    a_key = ApiKey.objects.create(user=user['sub'])
     return a_key.to_dict()
 
 
 @hug.get('/api_keys', requires=jwt_auth)
 def api_keys_get(user: hug.directives.user):
     """get api_keys"""
-    return [a_key.to_dict() for a_key in ApiKey.objects.filter(user=user['user'])]
+    return [a_key.to_dict() for a_key in ApiKey.objects.filter(user=user['sub'])]
+
+
+@hug.delete('/api_keys/{api_key_id}', requires=jwt_auth)
+def api_keys_delete(user: hug.directives.user, api_key_id: hug.types.text):
+    """delete an API key"""
+    api_key = ApiKey.objects.get(pk=api_key_id)
+    api_key.delete()
+    return {'status': 'deleted', '_id': api_key_id}
 
 
 @hug.cli()
