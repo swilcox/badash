@@ -123,3 +123,14 @@ class ApiKey(Document):
             }
         )
         return result_dict
+
+
+# class JWKSCache(Document):
+#     """JWKSCache Model to store known JWKs without having to get via requests"""
+#     created_at = fields.DateTimeField(default=utcnow)
+#     jwks = fields.StringField()
+#     meta = {
+#         'indexes': [
+#             {'fields': ['created_at'], 'expireAfterSeconds': 3600}
+#         ]
+#     }
