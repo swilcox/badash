@@ -1,13 +1,30 @@
 """test_api.py"""
-import json
-
 import hug
-import jwt
+from jose import jwt
+import requests_mock
 
 from app import api
 from models import Dashboard, Job, Event, ApiKey
-from .base_testcase import ApiTestCase
 from settings import settings
+from .base_testcase import ApiTestCase
+
+PRIVATE_KEY = """-----BEGIN RSA PRIVATE KEY-----
+MIICWwIBAAKBgQDdlatRjRjogo3WojgGHFHYLugdUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQsHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5Do2kQ+X5xK9cipRgEKwIDAQABAoGAD+onAtVye4ic7VR7V50DF9bOnwRwNXrARcDhq9LWNRrRGElESYYTQ6EbatXS3MCyjjX2eMhu/aF5YhXBwkppwxg+EOmXeh+MzL7Zh284OuPbkglAaGhV9bb6/5CpuGb1esyPbYW+Ty2PC0GSZfIXkXs76jXAu9TOBvD0ybc2YlkCQQDywg2R/7t3Q2OE2+yo382CLJdrlSLVROWKwb4tb2PjhY4XAwV8d1vy0RenxTB+K5Mu57uVSTHtrMK0GAtFr833AkEA6avx20OHo61Yela/4k5kQDtjEf1N0LfI+BcWZtxsS3jDM3i1Hp0KSu5rsCPb8acJo5RO26gGVrfAsDcIXKC+bQJAZZ2XIpsitLyPpuiMOvBbzPavd4gY6Z8KWrfYzJoI/Q9FuBo6rKwl4BFoToD7WIUS+hpkagwWiz+6zLoX1dbOZwJACmH5fSSjAkLRi54PKJ8TFUeOP15h9sQzydI8zJU+upvDEKZsZc/UhT/SySDOxQ4G/523Y0sz/OZtSWcol/UMgQJALesy++GdvoIDLfJX5GBQpuFgFenRiRDabxrE9MNUZ2aPFaFp+DyAe+b4nDwuJaW2LURbr8AEZga7oQj0uYxcYw==
+  -----END RSA PRIVATE KEY-----  """
+
+JWKS_RESP = """
+{"keys": [
+    {
+        "kty": "RSA",
+        "n": "3ZWrUY0Y6IKN1qI4BhxR2C7oHVFgGPYkd38uGq1jQNSqEvJFcN93CYm16_G78FAFKWqwsJb3Wx-nbxDn6LtP4AhULB1H0K0g7_jLklDAHvI8yhOKlvoyvsUFPWtNxlJyh5JJXvkNKV_4Oo12e69f8QCuQ6NpEPl-cSvXIqUYBCs",
+        "e": "AQAB",
+        "alg": "RS256",
+        "kid": "test",
+        "use": "sig"
+    }
+    ]
+}
+"""
 
 
 class TestApi(ApiTestCase):
@@ -32,7 +49,7 @@ class TestApi(ApiTestCase):
             user='test',
             api_key='my-test-key'
         )
-        self.token = jwt.encode({'user': 'me'}, settings.JWT_SECRET)
+        self.token = 'Bearer {}'.format(jwt.encode({'sub': 'test_user'}, PRIVATE_KEY, headers={'kid': 'test'}, algorithm=jwt.ALGORITHMS.RS256))
 
     def tearDown(self):
         Event.drop_collection()
@@ -104,7 +121,14 @@ class TestApi(ApiTestCase):
         self.assertEqual(resp.status, hug.HTTP_200)
         self.assertEqual(resp.data, Dashboard.objects.get(slug='test-dashboard').to_dict())
         # DELETE test
-        self.assertEqual(hug.test.delete(api, url='/dashboards/test-dashboard', headers={'X-Api-Key': 'my-test-key'}).status, hug.HTTP_200)
+        self.assertEqual(
+            hug.test.delete(
+                api,
+                url='/dashboards/test-dashboard',
+                headers={'X-Api-Key': 'my-test-key'}
+            ).status,
+            hug.HTTP_200
+        )
         self.assertEqual(Dashboard.objects.all().count(), 0)
         # POST test
         resp = hug.test.post(
@@ -219,15 +243,20 @@ class TestApi(ApiTestCase):
         self.assertEqual(hug.test.get(api, url='/api_keys').status, hug.HTTP_401)
         self.assertEqual(hug.test.put(api, url='/api_keys').status, hug.HTTP_405)
         self.assertEqual(hug.test.post(api, url='/api_keys').status, hug.HTTP_401)
-        self.assertEqual(
-            hug.test.post(
-                api,
-                url='/api_keys',
-                headers={'Authorization': self.token}
-            ).status,
-            hug.HTTP_201
-        )
-        self.assertEqual(ApiKey.objects.all().count(), 2)
-        resp = hug.test.get(api, url='/api_keys', headers={'Authorization': self.token})
-        self.assertEqual(resp.status, hug.HTTP_200)
-        self.assertEqual(resp.data, [ApiKey.objects.filter(user='me').first().to_dict()])
+        with requests_mock.mock() as m:
+            m.get(settings.JWKS_URL, text=JWKS_RESP)
+            self.assertEqual(
+                hug.test.post(
+                    api,
+                    url='/api_keys',
+                    headers={'Authorization': self.token}
+                ).status,
+                hug.HTTP_201
+            )
+            self.assertEqual(ApiKey.objects.all().count(), 2)
+            resp = hug.test.get(api, url='/api_keys', headers={'Authorization': self.token})
+            self.assertEqual(resp.status, hug.HTTP_200)
+            self.assertEqual(resp.data, [ApiKey.objects.filter(user='test_user').first().to_dict()])
+            resp = hug.test.delete(api, url='api_keys/{}'.format(ApiKey.objects.filter(user='test_user').first().to_dict()['_id']), headers={'Authorization': self.token})
+            self.assertEqual(resp.data['status'], 'deleted')
+            self.assertEqual(ApiKey.objects.all().count(), 1)
