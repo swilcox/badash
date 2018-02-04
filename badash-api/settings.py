@@ -8,7 +8,10 @@ class BaseConfig(object):
     """Base Configuration settings"""
     MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/badash')
     DEFAULT_PAGE_SIZE = 10
-    JWT_SECRET = os.environ.get('JWT_SECRET')
+    JWT_SECRET = os.environ.get('JWT_SECRET', None)
+    JWT_AUDIENCE = os.environ.get('JWT_AUDIENCE', '')
+    JWT_ALGORITHMS = ["RS256"]
+    JWKS_URL = os.environ.get('JWKS_URL', '')
 
 
 class LocalConfig(BaseConfig):
@@ -20,6 +23,8 @@ class TestingConfig(BaseConfig):
     """Settings to use while running tests"""
     MONGODB_URI = 'mongomock://localhost:27017/test_badash'
     JWT_SECRET = 'test_secret'
+    JWT_AUDIENCE = 'test'
+    JWKS_URL = 'http://www.example.com/jwks'
 
 
 class ProductionConfig(BaseConfig):
