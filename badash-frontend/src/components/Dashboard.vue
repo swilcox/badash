@@ -36,7 +36,12 @@ export default {
       })
     }
   },
-  created () {
+  watch: {
+    '$route.params.slug': function (slug) {
+      this.getDashboards()
+    }
+  },
+  mounted () {
     this.getDashboards()
     this.interval = setInterval(function () {
       this.getDashboards()
