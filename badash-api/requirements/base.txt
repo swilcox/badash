@@ -1,4 +1,4 @@
 hug
 mongoengine
-python-slugify
-python-jose==1.4.0
+python-slugify       # same slugify used by zappa
+python-jose==1.4.0   # pin to 1.4.0 for AWS Lambda

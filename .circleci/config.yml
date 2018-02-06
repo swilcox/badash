@@ -29,8 +29,8 @@ jobs:
       - restore_cache:
           keys:
           - badash-api-dependencies-{{ checksum "badash-api/requirements/combined-requirements.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - badash-api-dependencies-
+          # do NOT fallback to using the latest cache if no exact match is found
+          # - badash-api-dependencies-
 
       - run:
           name: install dependencies
