@@ -18,6 +18,8 @@ Install the requirements into a fresh python3 virtualenv:
 
 To run locally, have a locally available `mongodb` instance on the default port or specify the connection parameters to a mongodb server by setting the `MONGODB_URI` environment variable. The default value is `mongodb://localhost:27017/badash`.
 
+> *Note:* the `python-jose` version is currently pinned to 1.4.0 which makes `pycrypto` the default backend and does not install `pycryptodome`. This makes running on AWS Lambda easier.
+
 Start the hug server via:
 
 `hug -f app.py`
