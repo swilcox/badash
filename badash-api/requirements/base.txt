@@ -1,4 +1,4 @@
 hug
 mongoengine
 python-slugify
-python-jose[pycrypto]
+python-jose==1.4.0
