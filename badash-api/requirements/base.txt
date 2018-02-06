@@ -1,5 +1,4 @@
 hug
 mongoengine
 python-slugify
-python-jose-cryptodome
-
+python-jose==1.4.0
