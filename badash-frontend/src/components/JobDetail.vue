@@ -40,7 +40,7 @@ export default {
   },
   methods: {
     getJob () {
-      this.$http.get(`jobs/${this.$route.params.slug}`).then(response => {
+      this.$http.get(`jobs/${this.$route.params.jobSlug}`).then(response => {
         this.job = response.body
       },
       response => {
