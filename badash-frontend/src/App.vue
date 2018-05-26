@@ -9,7 +9,7 @@
       >
         <v-list dense>
           <v-subheader>Dashboards</v-subheader>
-          <v-list-tile v-for="dash in dashboards" :key="dash.slug" :to="{ name: 'dashboard', params: { slug: dash.slug } }">
+          <v-list-tile v-for="dash in dashboards" :key="dash.slug" :to="{ name: 'dashboard', params: { dashboardSlug: dash.slug } }">
             <v-list-tile-action>
               <v-icon>dashboard</v-icon>
             </v-list-tile-action>

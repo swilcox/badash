@@ -28,27 +28,25 @@ export default {
   },
   methods: {
     getDashboards () {
-      this.$http.get('dashboards/' + this.$route.params.slug).then(response => {
-        this.dashboard = response.body
-      },
-      response => {
-        console.log(response.statusText)
-      })
+      if (this.$route.params.dashboardSlug !== undefined) {
+        this.$http.get('dashboards/' + this.$route.params.dashboardSlug).then(response => {
+          this.dashboard = response.body
+        },
+        response => {
+          console.log(response.statusText)
+        })
+      }
     }
   },
   watch: {
-    '$route.params.slug': function (slug) {
-      this.getDashboards()
+    '$route.params.dashboardSlug': function (slug) {
+      if (slug !== undefined) {
+        this.getDashboards()
+      }
     }
   },
   mounted () {
     this.getDashboards()
-    this.interval = setInterval(function () {
-      this.getDashboards()
-    }.bind(this), 30000)
-  },
-  beforeDestoy () {
-    clearInterval(this.interval)
   }
 }
 </script>

@@ -30,12 +30,12 @@ export default new Router({
       component: Home
     },
     {
-      path: '/dashboard/:slug',
+      path: '/dashboard/:dashboardSlug',
       name: 'dashboard',
       component: Dashboard
     },
     {
-      path: '/job/:slug',
+      path: '/job/:jobSlug',
       name: 'job-detail',
       component: JobDetail
     },

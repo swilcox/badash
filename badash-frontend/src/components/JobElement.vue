@@ -9,7 +9,7 @@
       <p><v-chip>{{ this.job.events[0].datetimestamp|formatDate }}</v-chip></p>
     </v-card-text>
     <v-card-actions>
-      <v-btn :to="{ name: 'job-detail', params: { slug: job.slug } }">details</v-btn>
+      <v-btn :to="{ name: 'job-detail', params: { jobSlug: job.slug } }">details</v-btn>
     </v-card-actions>
   </v-card>
 </template>
